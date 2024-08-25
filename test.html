@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Chatbot</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&display=swap');
+        body {
+            font-family: "Cinzel", serif;
+            background-color: #8f8c8c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* SVG Button Styles */
+        #chat-trigger {
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+        }
+
+        /* Chatbot Container as a Cloud */
+        #chat-container {
+            width: 400px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            max-height: 80vh;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            animation: cloudAppear 1s forwards;
+        }
+
+        /* Cloud Animation */
+        @keyframes cloudAppear {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        #chat-box {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .chat-bubble {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+
+        .bot-bubble {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-start;
+        }
+
+        .user-bubble {
+            background-color: #e9ecef;
+            color: black;
+            align-self: flex-end;
+        }
+
+        #user-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        #submit-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        #submit-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Close Button */
+        #close-chat {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: transparent;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        #close-chat:hover {
+            color: red;
+        }
+
+        /* Adjusted SVG Button */
+        #chat-trigger {
+            width: 80px;
+            height: 90px;
+            cursor: pointer;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            border-radius: 50px;
+        }
+
+        #chat-trigger:hover {
+            background-color: rgb(203, 194, 226);
+        }
+    </style>
+</head>
+<body>
+
+<!-- SVG Button to Open Chatbot -->
+<img id="chat-trigger" src="nSEsq701.svg" alt="Open Chatbot">
+
+<div id="chat-container">
+    <!-- Close Button -->
+    <button id="close-chat">&times;</button>
+
+    <div id="chat-box">
+        <!-- Chat messages will appear here -->
+    </div>
+    <input type="text" id="user-input" placeholder="Type your message here...">
+    <button id="submit-button">Send</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatBox = document.getElementById('chat-box');
+        const chatContainer = document.getElementById('chat-container');
+        const chatTrigger = document.getElementById('chat-trigger');
+        const closeChat = document.getElementById('close-chat');
+
+        // Initial greeting message
+        addMessage('Hello! How are you doing today? I\'m here to help with any travel-related questions.', 'bot-bubble');
+
+        // Show chatbot when SVG button is clicked
+        chatTrigger.addEventListener('click', function() {
+            chatContainer.style.display = 'flex';
+        });
+
+        // Close chatbot when the close button is clicked
+        closeChat.addEventListener('click', function() {
+            chatContainer.style.display = 'none';
+        });
+
+        document.getElementById('submit-button').addEventListener('click', async function() {
+            const userInput = document.getElementById('user-input').value.trim();
+
+            if (userInput !== '') {
+                // Display user's message
+                addMessage(userInput, 'user-bubble');
+                document.getElementById('user-input').value = '';
+
+                // Send the user's input to the chatbot API
+                const response = await getBotResponse(userInput);
+
+                // Display the bot's response
+                addMessage(response, 'bot-bubble');
+            }
+        });
+
+        document.getElementById('user-input').addEventListener('keypress', async function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('submit-button').click();
+            }
+        });
+
+        async function getBotResponse(query) {
+            const url = 'https://chatgpt-gpt4-ai-chatbot.p.rapidapi.com/ask';
+            const options = {
+                method: 'POST',
+                headers: {
+                    'x-rapidapi-key': '5a27b56f09msh98bca7eab65d29fp1a3a19jsn43275f875551',
+                    'x-rapidapi-host': 'chatgpt-gpt4-ai-chatbot.p.rapidapi.com',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: query })
+            };
+
+            try {
+                const response = await fetch(url, options);
+                const result = await response.json();
+                
+                // Log the entire response to see what the API returns
+                console.log(result);
+                
+                // Return the response from the API
+                return result.response || 'Sorry, I didn\'t understand that.';
+            } catch (error) {
+                console.error('Error fetching the response:', error);
+                return 'Sorry, I couldn\'t process that request. Please try again.';
+            }
+        }
+
+        function addMessage(text, className) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-bubble', className);
+            messageElement.innerText = text;
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+        }
+    });
+</script>
+
+</body>
+</html>
